@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "BRAIN Alpha Research Assistant",
+  "version": "0.1.0",
+  "description": "Chrome MV3 extension for WorldQuant BRAIN Fast Expression research",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [],
+  "action": {
+    "default_popup": "src/ui/popup/index.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "src/ui/options/index.html",
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [],
+  "web_accessible_resources": [{
+    "resources": ["icons/*"],
+    "matches": ["<all_urls>"]
+  }]
+}
