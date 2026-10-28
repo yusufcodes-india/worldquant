@@ -1,0 +1,1 @@
+import{c as r,j as o}from"./client-C9yhCDaK.js";function s(){return o.jsxs("div",{style:{padding:"8px",fontFamily:"sans-serif"},children:[o.jsx("h2",{children:"BRAIN Alpha Dashboard"}),o.jsx("p",{children:"Dashboard UI coming soon."})]})}const n=document.getElementById("root");n&&r(n).render(o.jsx(s,{}));
