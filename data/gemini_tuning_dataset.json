@@ -1,0 +1,446 @@
+[
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as cap, close, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "group_neutralize(rank(ts_zscore(operating_income / cap, 126)) - rank(ts_delta(close, 5)), sector)",
+    "metadata": {
+      "alpha_id": "npAnMLWa",
+      "sharpe": 1.3,
+      "fitness": 1.17,
+      "operator_count": 7,
+      "field_count": 3,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 14 operators and at most 5 data fields. Use verified fields such as adv20, cap, cashflow_op, returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "value = group_rank(ts_backfill(cashflow_op, 120) / cap, subindustry);\nrev = -group_rank(ts_decay_linear(returns, 5), subindustry);\nsig = group_neutralize(0.6*value + 0.4*rev, subindustry);\ntrade_when(volume > 0.8*adv20, sig, -1)",
+    "metadata": {
+      "alpha_id": "JjPb8l3E",
+      "sharpe": 1.5,
+      "fitness": 1.22,
+      "operator_count": 14,
+      "field_count": 5,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 15 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, operating_income, returns. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(operating_income/cap, 252));\nb = rank(ts_rank(cashflow_op/assets, 252));\nc = -rank(ts_sum(returns, 5));\ngroup_neutralize(0.4*a + 0.4*b + 0.2*c, subindustry)",
+    "metadata": {
+      "alpha_id": "npAKQ50w",
+      "sharpe": 2.2,
+      "fitness": 1.91,
+      "operator_count": 15,
+      "field_count": 5,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 22 operators and at most 5 data fields. Use verified fields such as adv20, cap, cashflow_op, returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -(rank(ts_sum(returns, 2) / ts_std_dev(returns, 20)) - 0.5);\nvol_shock = rank(ts_mean(volume, 3) / adv20);\nfund = group_rank(ts_backfill(cashflow_op, 120) / cap, subindustry);\nfast = group_rank(ts_decay_linear(rev * vol_shock, 10), subindustry);\nalpha = 0.4 * fast + 0.6 * fund;\ntrade_when(abs(returns) < 0.1, alpha, -1)",
+    "metadata": {
+      "alpha_id": "j2egQ8O5",
+      "sharpe": 1.33,
+      "fitness": 1.1,
+      "operator_count": 22,
+      "field_count": 5,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 50));\nb = rank(ts_rank(operating_income / assets, 50));\nc = rank(-ts_rank(debt / assets, 50));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "e76O3eEl",
+      "sharpe": 1.95,
+      "fitness": 1.34,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 12 operators and at most 4 data fields. Use verified fields such as assets, cap, cashflow_op, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "q = ts_rank(operating_income / assets, 252);\nc = ts_rank(cashflow_op / assets, 252);\nv = ts_rank(operating_income / cap, 252);\ngroup_rank(0.35*q + 0.35*c + 0.30*v, subindustry)",
+    "metadata": {
+      "alpha_id": "j2eglO0k",
+      "sharpe": 1.84,
+      "fitness": 1.37,
+      "operator_count": 12,
+      "field_count": 4,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 12 operators and at most 6 data fields. Use verified fields such as adv20, assets, cap, cashflow_op, operating_income, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = group_rank(ts_rank(operating_income / assets, 252), subindustry);\nb = group_rank(ts_rank(cashflow_op / cap, 252), subindustry);\ntrade_when(volume > 0.5 * adv20, ts_mean(a + b, 10), -1)",
+    "metadata": {
+      "alpha_id": "WjLgnMpN",
+      "sharpe": 1.72,
+      "fitness": 1.28,
+      "operator_count": 12,
+      "field_count": 6,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 300);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "88vLgJZv",
+      "sharpe": 1.44,
+      "fitness": 1.01,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "group_neutralize(rank(-ts_zscore(returns, 126) / ts_std_dev(returns, 2)), subindustry)\n# 0.64 10 20 12\n# 0.68 20 20 12\n# 0.69 20 10 12\n# 0.77 20 2 12",
+    "metadata": {
+      "alpha_id": "O0JmY0w7",
+      "sharpe": 1.85,
+      "fitness": 1.0,
+      "operator_count": 6,
+      "field_count": 1,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as assets, liabilities, returns. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "group_neutralize(rank(liabilities / assets) - rank(returns), subindustry)",
+    "metadata": {
+      "alpha_id": "pwvoEJqg",
+      "sharpe": 2.55,
+      "fitness": 1.87,
+      "operator_count": 5,
+      "field_count": 3,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 50));\nb = rank(ts_rank(operating_income / assets, 200));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "rKdozYzm",
+      "sharpe": 1.47,
+      "fitness": 1.05,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 50));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "mLY8Ar0X",
+      "sharpe": 1.4,
+      "fitness": 1.0,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 80));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "9qEwbA7d",
+      "sharpe": 1.4,
+      "fitness": 1.04,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 301);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "N1eOWAwe",
+      "sharpe": 1.44,
+      "fitness": 1.01,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 310);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "0mj8kWk8",
+      "sharpe": 1.42,
+      "fitness": 1.0,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 320);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "omoYwm7m",
+      "sharpe": 1.42,
+      "fitness": 1.0,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 350);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "e76reZmM",
+      "sharpe": 1.41,
+      "fitness": 1.01,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 9), 500);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "e76reaWz",
+      "sharpe": 1.33,
+      "fitness": 0.97,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 500);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "E5VKov3r",
+      "sharpe": 1.35,
+      "fitness": 0.98,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 200);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "e76reO9g",
+      "sharpe": 1.62,
+      "fitness": 1.1,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 100);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "npAWwZga",
+      "sharpe": 1.72,
+      "fitness": 1.07,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 50);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "omoYQwQn",
+      "sharpe": 1.73,
+      "fitness": 1.01,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 40);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "3qjAgrZe",
+      "sharpe": 1.8,
+      "fitness": 1.05,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 30);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "P0M1j0EL",
+      "sharpe": 1.82,
+      "fitness": 1.03,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 20);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "RRArXx9o",
+      "sharpe": 1.88,
+      "fitness": 1.03,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 4);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "QPYQe6mr",
+      "sharpe": 2.07,
+      "fitness": 0.98,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 100));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "vROm056Q",
+      "sharpe": 1.39,
+      "fitness": 1.02,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 10);\nvol_filter = volume > ts_mean(volume, 10);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "O0J9em7d",
+      "sharpe": 2.07,
+      "fitness": 1.09,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 120));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "GrgoVYMx",
+      "sharpe": 1.36,
+      "fitness": 0.99,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 270));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "wp9e6Vpv",
+      "sharpe": 1.27,
+      "fitness": 0.89,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 7), 10);\nvol_filter = volume > ts_mean(volume, 20);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "O0J9eEMR",
+      "sharpe": 2.04,
+      "fitness": 1.08,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 13 operators and at most 5 data fields. Use verified fields such as assets, cap, cashflow_op, debt, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "a = rank(ts_rank(cashflow_op / cap, 250));\nb = rank(ts_rank(operating_income / assets, 250));\nc = rank(-ts_rank(debt / assets, 250));\nrank(a + b + c)",
+    "metadata": {
+      "alpha_id": "A1Q36jld",
+      "sharpe": 1.28,
+      "fitness": 0.9,
+      "operator_count": 13,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 22 operators and at most 5 data fields. Use verified fields such as adv20, cap, cashflow_op, returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -rank(ts_sum(returns, 2) / ts_std_dev(returns, 20));\nvol_shock = rank(ts_mean(volume, 2) / adv20);\nfund = rank(ts_backfill(cashflow_op, 120) / cap);\nalpha = 0.45 * rank(ts_decay_linear(rev * vol_shock, 9)) + 0.55 * fund;\ntrade_when(abs(returns) < 0.1, alpha, abs(returns) > 0.1)",
+    "metadata": {
+      "alpha_id": "omoYeNk2",
+      "sharpe": 1.39,
+      "fitness": 0.84,
+      "operator_count": 22,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 9), 10);\nvol_filter = volume > ts_mean(volume, 20);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "pwv7g6do",
+      "sharpe": 1.59,
+      "fitness": 0.81,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in PRICE_REVERSION. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as cap, cashflow_op, operating_income. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "cf_yield = cashflow_op / cap;\nop_yield = operating_income / cap;\nsignal = rank(ts_rank(cf_yield, 252)) + rank(ts_rank(op_yield, 252));\ngroup_rank(signal, subindustry)",
+    "metadata": {
+      "alpha_id": "omoYeOok",
+      "sharpe": 1.81,
+      "fitness": 1.49,
+      "operator_count": 8,
+      "field_count": 3,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 8 operators and at most 4 data fields. Use verified fields such as returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -ts_decay_linear(ts_zscore(returns, 5), 10);\nvol_filter = volume > ts_mean(volume, 20);\ntrade_when(vol_filter, group_rank(rev, subindustry), -1)",
+    "metadata": {
+      "alpha_id": "rKdWXaJd",
+      "sharpe": 1.7,
+      "fitness": 0.83,
+      "operator_count": 8,
+      "field_count": 2,
+      "status": "UNSUBMITTED"
+    }
+  },
+  {
+    "text_input": "Design a WorldQuant BRAIN Fast Expression quantitative alpha in Quantitative Factor. Constraints: at most 22 operators and at most 5 data fields. Use verified fields such as adv20, cap, cashflow_op, returns, volume. The expression must be mathematically robust, pass sub-universe tests, and exhibit strong risk-adjusted returns.",
+    "output": "rev = -rank(ts_sum(returns, 2) / ts_std_dev(returns, 20));\nvol_shock = rank(ts_mean(volume, 2) / adv20);\nfund = rank(ts_backfill(cashflow_op, 120) / cap);\nalpha = 0.45 * rank(ts_decay_linear(rev * vol_shock, 7)) + 0.55 * fund;\ntrade_when(abs(returns) < 0.1, alpha, abs(returns) > 0.1)",
+    "metadata": {
+      "alpha_id": "pwv7OMdv",
+      "sharpe": 1.46,
+      "fitness": 0.85,
+      "operator_count": 22,
+      "field_count": 5,
+      "status": "UNSUBMITTED"
+    }
+  }
+]
