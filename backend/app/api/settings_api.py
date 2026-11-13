@@ -5,8 +5,22 @@ from app.core.security import verify_pairing_token, verify_host_header, redact_s
 from app.core.config import settings
 from app.adapters.manager import adapter_manager
 from app.gemini.client import gemini_client
+from app.db.connection import get_db
 
 router = APIRouter(prefix="/settings", tags=["Settings"], dependencies=[Depends(verify_host_header), Depends(verify_pairing_token)])
+
+def _get_app_config(key: str, default: str = "") -> str:
+    with get_db() as conn:
+        row = conn.execute("SELECT value FROM app_config WHERE key = ?", (key,)).fetchone()
+        return row["value"] if row else default
+
+def _set_app_config(key: str, value: str):
+    with get_db() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO app_config (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            (key, value)
+        )
+        conn.commit()
 
 class SettingsUpdateRequest(BaseModel):
     gemini_api_key: Optional[str] = None
@@ -64,6 +78,8 @@ def approve_live(req: LiveApprovalRequest):
     adapter = adapter_manager.get_adapter()
     if hasattr(adapter, "approve_live_session"):
         adapter.approve_live_session(req.approve)
+        # Persist to SQLite so approval survives restarts
+        _set_app_config("live_session_approved", "1" if req.approve else "0")
         return {"success": True, "live_approved": req.approve}
     return {"success": False, "message": "Current adapter does not require live approval."}
 
@@ -73,4 +89,11 @@ def get_platform_simulation_settings():
     if hasattr(adapter, "fetch_user_simulation_settings"):
         return adapter.fetch_user_simulation_settings()
     return {}
+
+@router.get("/live_approval")
+def get_live_approval_status():
+    persisted = _get_app_config("live_session_approved", "0")
+    adapter = adapter_manager.get_adapter()
+    in_memory = getattr(adapter, "_user_approved_live_session", False)
+    return {"live_session_approved": persisted == "1", "in_memory": in_memory}
 

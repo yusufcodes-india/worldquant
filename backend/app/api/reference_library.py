@@ -175,47 +175,62 @@ def add_reference_alpha(req: ReferenceAlphaCreate):
         )
 
 @router.post("/sync_brain")
-def sync_brain_alphas(limit: int = 100):
+def sync_brain_alphas(limit: int = 100, offset: int = 0, paginate_all: bool = True):
     """
     Syncs user alphas from GET /users/{user_id}/alphas into the local reference library.
+    When paginate_all=True (default), walks all pages until every alpha is synced.
     """
     from app.adapters.manager import adapter_manager
     adapter = adapter_manager.get_adapter()
     if not hasattr(adapter, "fetch_user_alphas"):
         raise HTTPException(status_code=400, detail="Active adapter does not support live alpha sync.")
 
-    data = adapter.fetch_user_alphas(limit=limit)
-    alphas = data.get("results", [])
-    count = 0
-    with get_db() as conn:
-        cursor = conn.cursor()
-        for alpha in alphas:
-            aid = alpha.get("id")
-            reg = alpha.get("regular", {})
-            code = reg.get("code") if isinstance(reg, dict) else str(reg)
-            category = alpha.get("category")
-            name = alpha.get("name")
-            submitted = alpha.get("dateSubmitted")
-            status = "SUBMITTED" if submitted else "PLATFORM_VERIFIED"
-            cursor.execute(
-                """
-                INSERT OR REPLACE INTO reference_library (
-                    id, expression, signal_family, description, status, submitted_date, settings, raw_metadata, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                """,
-                (
-                    aid,
-                    code or "",
-                    category,
-                    name,
-                    status,
-                    submitted,
-                    json.dumps(alpha.get("settings", {})),
-                    json.dumps(alpha)
-                )
-            )
-            count += 1
-        conn.commit()
+    total_synced = 0
+    total_on_platform = 0
+    current_offset = offset
 
-    return {"synced_count": count, "total_on_platform": data.get("count", count)}
+    while True:
+        data = adapter.fetch_user_alphas(limit=limit, offset=current_offset)
+        alphas = data.get("results", [])
+        total_on_platform = data.get("count", total_on_platform)
+
+        if not alphas:
+            break
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            for alpha in alphas:
+                aid = alpha.get("id")
+                reg = alpha.get("regular", {})
+                code = reg.get("code") if isinstance(reg, dict) else str(reg)
+                category = alpha.get("category")
+                name = alpha.get("name")
+                submitted = alpha.get("dateSubmitted")
+                status = "SUBMITTED" if submitted else "PLATFORM_VERIFIED"
+                cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO reference_library (
+                        id, expression, signal_family, description, status, submitted_date, settings, raw_metadata, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    """,
+                    (
+                        aid,
+                        code or "",
+                        category,
+                        name,
+                        status,
+                        submitted,
+                        json.dumps(alpha.get("settings", {})),
+                        json.dumps(alpha)
+                    )
+                )
+                total_synced += 1
+            conn.commit()
+
+        if not paginate_all or len(alphas) < limit:
+            break
+        current_offset += limit
+
+    logger.info(f"Synced {total_synced} alphas from BRAIN (total on platform: {total_on_platform})")
+    return {"synced_count": total_synced, "total_on_platform": total_on_platform}
 

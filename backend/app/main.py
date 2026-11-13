@@ -35,6 +35,18 @@ async def lifespan(app: FastAPI):
     queue_engine.recover_on_startup()
     # 3. Init default reference library
     init_default_reference_library()
+
+    # 4. Restore persisted live-session approval
+    try:
+        from app.api.settings_api import _get_app_config
+        from app.adapters.manager import adapter_manager
+        if _get_app_config("live_session_approved", "0") == "1":
+            adapter = adapter_manager.get_adapter()
+            if hasattr(adapter, "approve_live_session"):
+                adapter.approve_live_session(True)
+                logger.info("Restored persisted live-session approval from app_config.")
+    except Exception as e:
+        logger.warning(f"Could not restore live-session approval: {e}")
     
     token = settings.get_or_create_pairing_token()
     logger.info(f"Pilot Daemon listening on http://{settings.host}:{settings.port}")
@@ -83,11 +95,36 @@ app.include_router(export_import_router)
 
 @app.get("/health")
 def health_check():
+    from app.db.connection import get_db
+    from app.adapters.manager import adapter_manager
+
+    # DB liveness check
+    db_ok = False
+    db_tables = 0
+    try:
+        with get_db() as conn:
+            cursor = conn.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
+            db_tables = cursor.fetchone()[0]
+            db_ok = db_tables > 0
+    except Exception:
+        pass
+
+    # Adapter status
+    adapter = adapter_manager.get_adapter()
+    adapter_mode = adapter.mode
+    live_approved = getattr(adapter, "_user_approved_live_session", False)
+
+    overall = "healthy" if db_ok else "degraded"
+
     return {
-        "status": "healthy",
+        "status": overall,
         "app": settings.app_name,
         "version": settings.version,
-        "mode": settings.integration_mode
+        "mode": settings.integration_mode,
+        "db_ok": db_ok,
+        "db_tables": db_tables,
+        "adapter_mode": adapter_mode,
+        "live_session_approved": live_approved,
     }
 
 # Serve Dashboard and Extension assets if built

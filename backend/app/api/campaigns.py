@@ -149,6 +149,7 @@ def run_batch_cycles(campaign_id: str, cycles: int = Query(5, ge=1, le=50)):
 
 @router.get("/{campaign_id}/stats")
 def get_campaign_stats(campaign_id: str):
+    """Detailed campaign statistics with candidate and qualification breakdowns."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT status, budget_simulations, submitted_simulations_count FROM campaigns WHERE id = ?", (campaign_id,))
