@@ -1,152 +1,172 @@
 # Alpha Research Pilot
 
-**Alpha Research Pilot** is a local-first, autonomous quantitative alpha research platform built specifically for **WorldQuant BRAIN Fast Expression** formulation, static AST validation, durable simulation scheduling, and self-correlation control.
+**Alpha Research Pilot** is a local-first, autonomous quantitative alpha research platform built for **WorldQuant BRAIN Fast Expression** formulation, static AST validation, durable simulation scheduling, and self-correlation control.
 
-It pairs a **Manifest V3 browser extension** (and full-page dashboard compatible with **macOS Opera GX** and **Google Chrome**) with a hardened, persistent local **FastAPI / SQLite** daemon.
-
----
-
-## 1. Key Features
-
-- **AST Fast Expression Parser & Unit Validator**: Recursive-descent compiler front-end enforcing statement scoping, defined-before-use variables, field/operator allowlists, vector reduction rules (e.g. `vec_avg(nws12_afterhsz_sl)`), and unit consistency (rejecting constant offsets on dollar/volume terms such as `volume * close + 1`).
-- **Low-Corr Sprint & Account Rule Profiles**: Enforces strict constraints (Low-Corr Sprint: &le; 8 operators, &le; 4 data fields, Sharpe &ge; 1.25, Self-Corr &lt; 0.70; Account: &le; 64 operators). Strictest active profile takes precedence.
-- **Mandatory Self-Correlation Control**:
-  - Pre-seeded with user reference library (S1 to S7).
-  - Explicit tracking: `NOT CHECKED`, `LOCAL ESTIMATE ONLY`, `PLATFORM VERIFIED PASS`, `PLATFORM VERIFIED FAIL`, `STALE / RECHECK REQUIRED`.
-  - Reference library updates flag affected candidate checks as `STALE / RECHECK REQUIRED`.
-  - Missing checks are **NEVER** marked as `PASS`.
-- **Durable Queue State Machine**:
-  - SQLite WAL persistence: Survives browser popup closure and backend process restarts.
-  - Atomic simulation budget reservation (up to 1,500 simulation slots enforced transactionally before dispatch).
-  - Ambiguous network outcomes transition to `submission_uncertain` to prevent duplicate submissions.
-- **Official Google Gemini Integration**: Uses `google-genai` Python SDK (`gemini-3.8-flash`) with structured JSON outputs and automated fallback to deterministic candidate generation when offline or unconfigured.
-- **Security & Sandbox Isolation**: Loopback only (`127.0.0.1`), DNS rebinding protection via `HostHeaderMiddleware`, 64-character pairing tokens (`X-Pilot-Token`), and guaranteed recursive secret redaction on all exports and logs.
+It pairs a **Manifest V3 browser extension** (compatible with **Opera GX** and **Chrome**) with a hardened **FastAPI / SQLite** local daemon.
 
 ---
 
-## 2. Directory Structure
+## Key Features
+
+- **AST Fast Expression Parser**: Recursive-descent validator enforcing ≤ 8 operators, ≤ 3 data fields (grouping fields exempt), statement scoping, and defined-before-use variables.
+- **Autonomous Research Loop**: Generate → Validate → Simulate → Evaluate → Revise — runs unattended within a budget cap.
+- **Durable Queue Engine**: SQLite WAL persistence, atomic 1,500-job budget reservation, `submission_uncertain` safeguards, and full crash recovery on restart.
+- **Mandatory Self-Correlation Control**: Tracks status per-candidate (`NOT CHECKED`, `LOCAL ESTIMATE ONLY`, `PLATFORM VERIFIED PASS/FAIL`, `STALE / RECHECK REQUIRED`). Reference library changes automatically flag stale checks.
+- **BRAIN Live Adapter**: ALTCHA challenge-response auth, `POST /simulations`, polling, official `self/prod` correlation endpoints. Final submission is always manual.
+- **Gemini AI Integration**: `gemini-3.8-flash` via Interactions API for candidate generation with deterministic fallback when offline.
+- **10 Correlation-Breaking Recipes**: Verified perturbation strategies with variable prelude wrapping.
+- **Security**: Loopback only (`127.0.0.1`), DNS rebinding protection, 64-char `X-Pilot-Token` pairing, recursive secret redaction on all exports.
+
+---
+
+## Directory Structure
 
 ```
 quant/
 ├── backend/
-│   ├── app/
-│   │   ├── api/          # FastAPI routers (campaigns, candidates, pairing, correlations, etc.)
-│   │   ├── core/         # Config, security, pairing token, redaction
-│   │   ├── db/           # SQLite connection, WAL mode, migrations
-│   │   ├── engine/       # AST parser, unit checker, queue engine, research loop
-│   │   ├── adapters/     # MOCK adapter, guarded LIVE adapter, MANUAL import adapter
-│   │   ├── gemini/       # Google Gemini SDK structured output client
-│   │   ├── observation/  # Guarded current-tab observation service (behind feature flag)
-│   │   └── main.py       # FastAPI daemon entry point
-│   ├── requirements.txt  # Pinned backend dependencies
-│   └── requirements.lock # Dependency lockfile
+│   └── app/
+│       ├── api/           # FastAPI routers (campaigns, candidates, correlations, settings, pairing, export/import, reference library)
+│       ├── core/          # Config, security, pairing token
+│       ├── db/            # SQLite connection (WAL mode), migrations (9 tables)
+│       ├── engine/        # AST parser, queue engine, correlation checker/breaker, research loop
+│       ├── adapters/      # MOCK, LIVE (BRAIN), MANUAL adapters + manager
+│       ├── gemini/        # Google Gemini SDK client
+│       ├── observation/   # Tab observer (feature-flagged)
+│       └── main.py        # FastAPI entry point with lifespan hooks
 ├── extension/
-│   ├── src/              # TypeScript React source (Popup, Full Dashboard, Background MV3)
-│   ├── public/           # manifest.json (Manifest V3)
-│   ├── dist/             # Built unpacked extension ready to load in Opera GX / Chrome
-│   ├── package.json      # Extension npm configuration
-│   └── vite.config.ts    # Multi-page build configuration
-├── tests/                # 32 pytest automated tests including 1,500-job software load test
-├── scripts/              # run_backend.sh, build_extension.sh, run_tests.sh, dry_run_demo.py
-├── docs/                 # architecture.md, security.md, capability_matrix.md, test_report.md
-└── .env.example          # Safe configuration template (zero real secrets)
+│   ├── src/               # TypeScript React (popup, dashboard, background service worker)
+│   ├── dist/              # Built unpacked extension
+│   └── vite.config.ts     # Multi-page build config
+├── tests/                 # 36 pytest tests (parser, queue, correlations, profiles, load test, Gemini, security)
+├── scripts/               # run_backend.sh, run_tests.sh, build_extension.sh, live_smoke_test.py, dry_run_demo.py
+├── docs/                  # architecture.md, security.md, capability_matrix.md, test_report.md, limitations_and_roadmap.md
+├── data/                  # Gemini tuning datasets (JSON/JSONL)
+└── .env.example           # Safe config template (no real secrets)
 ```
 
 ---
 
-## 3. Installation & Setup (macOS)
+## Quick Start (macOS)
 
 ### Prerequisites
-- macOS (Apple Silicon or Intel)
 - Python 3.10+
 - Node.js v18+ and npm
 - Opera GX or Google Chrome
 
-### Step 1: Clone & Set Up Backend Environment
-```bash
-cd /Users/yusuftarwala/quant
+### 1. Clone and install
 
-# 1. Create and activate virtual environment
+```bash
+git clone https://github.com/yusufcodes-india/worldquant.git
+cd worldquant
+
+# Create virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 2. Install backend dependencies
+# Install backend dependencies
 pip install -r backend/requirements.txt
+
+# Install alpha-harness (editable, for shared utilities)
+pip install -e alpha-harness/backend
 ```
 
-### Step 2: Configure Environment
-Copy `.env.example` to `.env` (optional, sane defaults are auto-configured):
+### 2. Configure environment
+
 ```bash
 cp .env.example .env
+chmod 600 .env
 ```
-*(Optional)* Add your Gemini API key:
+
+Edit `.env` and add your keys:
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
+BRAIN_USERNAME=your_email
+BRAIN_PASSWORD=your_password
+GEMINI_API_KEY=your_gemini_key       # optional — falls back to deterministic generation
+INTEGRATION_MODE=MOCK                 # set to LIVE for real BRAIN integration
 ```
 
-### Step 3: Build the Browser Extension
+### 3. Build the browser extension
+
 ```bash
-cd extension
-npm install
-npm run build
-cd ..
+cd extension && npm install && npm run build && cd ..
 ```
-The built, unpacked extension is located in `extension/dist/`.
 
----
+### 4. Start the backend
 
-## 4. Loading the Extension in Opera GX & Google Chrome
+```bash
+PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
+```
 
-### In Opera GX:
-1. Open Opera GX and navigate to `opera://extensions`.
-2. Toggle on **Developer mode** in the top right corner.
-3. Click **Load unpacked**.
-4. Select the directory: `/Users/yusuftarwala/quant/extension/dist`.
-5. The **Alpha Research Pilot** icon will appear in your extension toolbar.
-
-### In Google Chrome:
-1. Open Chrome and navigate to `chrome://extensions`.
-2. Enable **Developer mode** (toggle in top right).
-3. Click **Load unpacked** and choose `/Users/yusuftarwala/quant/extension/dist`.
-
----
-
-## 5. Running the Application
-
-### 1. Start the Backend Daemon
-Run the startup script:
+Or use the script:
 ```bash
 ./scripts/run_backend.sh
 ```
-The daemon starts on `http://127.0.0.1:8765`. On initial startup, it generates a secure 64-character pairing token and outputs:
+
+The daemon prints a pairing token on startup:
 ```
-Secure Pairing Token: <64-character-hex-token>
+Secure Pairing Token: <64-character-hex>
 ```
 
-### 2. Pair the Browser Extension
-1. Click the **Alpha Research Pilot** extension icon in your browser toolbar.
-2. If prompted, paste the pairing token (from terminal output or `data/.pairing_token`).
-3. Click **Pair with Local Backend**.
-4. Click **Open Full Research Dashboard** to launch the comprehensive control panel (`dashboard.html`).
+### 5. Load the extension
+
+**Opera GX**: `opera://extensions` → Developer mode → Load unpacked → select `extension/dist/`
+
+**Chrome**: `chrome://extensions` → Developer mode → Load unpacked → select `extension/dist/`
+
+Paste the pairing token when prompted.
 
 ---
 
-## 6. Running Automated Tests
+## Running Tests
 
-Run the complete 32-test automated suite (including AST parser, unit checker, profile precedence, queue state machine, and the 1,500-job software load test):
 ```bash
-./scripts/run_tests.sh
+PYTHONPATH=backend .venv/bin/pytest tests/ -q
 ```
 
-To run the full end-to-end dry-run demonstration:
+Expected: **36 passed** (~6s). Includes AST parser, queue state machine, 1,500-job load test, correlation breaker, Gemini integration, and security guard tests.
+
+### End-to-end mock demo (2 autonomous cycles)
+
 ```bash
-python3 scripts/dry_run_demo.py
+PYTHONPATH=backend .venv/bin/python tests/demonstrate_e2e_cycles.py
 ```
 
 ---
 
-## 7. Safety, Verification & Zero-Leak Guarantees
+## API Endpoints
 
-- **MOCK Platform First**: All simulations run by default against a deterministic mock platform clearly labeled `MOCK` with synthetic metrics and realistic 252-day PnL series. Mock data is never represented as live platform data.
-- **Strict Submission Safety**: The real BRAIN adapter requires verified credentials, explicit user session approval, and blocks autonomous final alpha submissions.
-- **Zero Telemetry & Zero Leakage**: All keys, passwords, and pairing tokens are redacted recursively before export. No secrets are passed to AI prompts or extension storage.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Liveness check (DB, adapter status) |
+| `/docs` | GET | Interactive Swagger UI |
+| `/settings` | GET | Full system status |
+| `/settings/approve_live` | POST | Approve/revoke live simulation session |
+| `/settings/live_approval` | GET | Check live approval status |
+| `/settings/platform_simulation` | GET | Fetch BRAIN platform settings |
+| `/campaigns` | GET/POST | List or create research campaigns |
+| `/campaigns/{id}/step` | POST | Execute one research cycle |
+| `/campaigns/{id}/run_batch` | POST | Run N cycles (1–50) |
+| `/campaigns/{id}/stats` | GET | Detailed campaign statistics |
+| `/candidates` | GET | List candidates for a campaign |
+| `/correlations/self/{id}` | GET | Check self-correlation status |
+| `/reference_library` | GET/POST | Manage reference alpha library |
+| `/reference_library/sync_brain` | POST | Paginated sync of all BRAIN alphas |
+| `/export` | GET | Export campaign data (secrets redacted) |
+| `/import` | POST | Import campaign data |
+| `/pairing/token` | POST | Generate new pairing token |
+
+---
+
+## Safety Guarantees
+
+- **MOCK by default**: All simulations start against a deterministic mock platform. Mock data is never labeled as live.
+- **Explicit approval required**: Live BRAIN simulations need `POST /settings/approve_live {"approve": true}`. Approval persists across restarts (stored in SQLite).
+- **Final submission is ALWAYS manual**: The system never automates `POST /alphas/{id}/submit`.
+- **Budget enforcement**: Atomic simulation budget checks before every dispatch. Hard cap: 1,500 jobs.
+- **Zero telemetry**: No secrets in AI prompts, exports, or logs. Recursive redaction on all output.
+
+---
+
+## License
+
+MIT
