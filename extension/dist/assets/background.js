@@ -1,0 +1,1 @@
+chrome.runtime.onInstalled.addListener(()=>{console.log("Alpha Research Pilot Extension installed.")});chrome.runtime.onMessage.addListener((e,t,r)=>(e.type==="OPEN_DASHBOARD"&&(chrome.tabs.create({url:chrome.runtime.getURL("dashboard.html")}),r({success:!0})),!0));

@@ -1,0 +1,57 @@
+{
+  "campaign": {
+    "id": "demo-sprint-campaign-01",
+    "name": "Low-Corr Sprint 2026",
+    "profile_name": "Low-Corr Sprint",
+    "budget_simulations": 1500,
+    "submitted_simulations_count": 3,
+    "status": "completed",
+    "profile_snapshot": {
+      "name": "Low-Corr Sprint",
+      "max_operators": 8,
+      "max_fields": 4,
+      "min_sharpe": 1.25,
+      "min_fitness": 1.0,
+      "min_turnover": 0.01,
+      "max_turnover": 0.70,
+      "max_self_correlation_target": 0.60
+    }
+  },
+  "candidates": [
+    {
+      "id": "cand-001",
+      "expression": "val = cashflow_op / assets; group_rank(val, industry);",
+      "signal_family": "Fundamental Quality",
+      "hypothesis": "Cashflow return on assets represents high-quality operational profitability.",
+      "estimated_fields": 2,
+      "estimated_operators": 2,
+      "validation_status": "passed",
+      "queue_status": "completed"
+    }
+  ],
+  "simulation_results": [
+    {
+      "candidate_id": "cand-001",
+      "is_mock": true,
+      "platform_status": "COMPLETE",
+      "main_sharpe": 1.41,
+      "fitness": 1.26,
+      "turnover": 0.09,
+      "subuniverse_sharpe": 0.97,
+      "subuniverse_cutoff": 0.86,
+      "subuniverse_pass_margin": 0.11,
+      "weight_distribution_pass": 1
+    }
+  ],
+  "correlations": [
+    {
+      "candidate_id": "cand-001",
+      "check_type": "self_correlation",
+      "status": "PLATFORM_VERIFIED_PASS",
+      "measured_value": 0.59,
+      "official_threshold": 0.70,
+      "official_pass": 1,
+      "provenance_source": "mock"
+    }
+  ]
+}

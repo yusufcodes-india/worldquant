@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Alpha Research Pilot",
+  "version": "1.0.0",
+  "description": "Local-first AI alpha research control panel for WorldQuant BRAIN Fast Expressions",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Alpha Research Pilot"
+  },
+  "background": {
+    "service_worker": "assets/background.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "optional_permissions": [
+    "activeTab"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+}
